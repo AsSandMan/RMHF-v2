@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Добавить операцию — Моя Бухгалтерия</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
 
@@ -121,6 +122,39 @@
     </form>
 
   </div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();               // растягивает на весь экран
+  tg.MainButton.show();      // показывает главную кнопку Telegram (если нужно)
+
+  // Автоматически передаём initData в каждый запрос (fetch / form submit)
+  document.addEventListener("DOMContentLoaded", () => {
+    // Для всех форм
+    document.querySelectorAll("form").forEach(form => {
+      const hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = "tg_init_data";
+      hidden.value = tg.initData;
+      form.appendChild(hidden);
+    });
+
+    // Для fetch (если где-то используешь)
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+      options.headers = options.headers || {};
+      options.headers["X-Telegram-WebApp-InitData"] = tg.initData;
+      return originalFetch(url, options);
+    };
+  });
+
+  // Опционально: меняем тему под Telegram
+  if (tg.themeParams) {
+    document.body.style.background = tg.themeParams.bg_color || "#f3f4f6";
+    document.body.style.color = tg.themeParams.text_color || "#000";
+  }
+</script>
 
 </body>
 </html>

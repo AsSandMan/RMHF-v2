@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.env/
+.env
+*.env
+
+# Данные
+home_finance.json
+
+# Сборка
+build/
+dist/
+*.egg-info/
