@@ -10,6 +10,16 @@ load_dotenv()  # автоматически ищет .env в корне прое
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import json
+import os
+from datetime import datetime
+import webview  # pywebview
+
+app = Flask(__name__)
+
+DATA_FILE = "home_finance.json"
+
 def is_valid_telegram_initdata(init_data: str) -> bool:
     if not BOT_TOKEN:
         return False  # на локалхосте можно временно отключить проверку
@@ -42,18 +52,6 @@ def check_telegram_auth():
 
     if not init_data or not is_valid_telegram_initdata(init_data):
         abort(403, "Invalid Telegram authentication")
-
-
-
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-import json
-import os
-from datetime import datetime
-import webview  # pywebview
-
-app = Flask(__name__)
-
-DATA_FILE = "home_finance.json"
 
 def load_data():
     default_structure = {
