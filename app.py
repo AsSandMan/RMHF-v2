@@ -1,25 +1,25 @@
-import hmac
-import hashlib
-from flask import request, abort
+from flask import Flask, render_template, request, redirect, url_for, jsonify, abort
+from flask_cors import CORS
 from dotenv import load_dotenv
 import os
+import json
+import hmac
+import hashlib
+from datetime import datetime
 
-# Загружаем .env только если файл существует
-load_dotenv()  # автоматически ищет .env в корне проекта
+# Загружаем .env (если есть)
+load_dotenv()
 
+# Токен бота из переменных окружения (.env или Render)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-import json
-import os
-from datetime import datetime
-import webview  # pywebview
-
+# Создаём приложение Flask ПЕРВЫМ ДЕЛОМ
 app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # для теста; потом можно сузить
 
 DATA_FILE = "home_finance.json"
 
+# Функция валидации Telegram initData
 def is_valid_telegram_initdata(init_data: str) -> bool:
     if not BOT_TOKEN:
         return False  # на локалхосте можно временно отключить проверку
@@ -36,23 +36,24 @@ def is_valid_telegram_initdata(init_data: str) -> bool:
     except:
         return False
 
-# ------------------ защита всех маршрутов ------------------
-
+# Защита всех маршрутов (кроме статики)
 @app.before_request
 def check_telegram_auth():
-    if request.path.startswith("/static/"):  # пропускаем статику
+    if request.path.startswith("/static/"):
         return
 
     init_data = request.headers.get("X-Telegram-WebApp-InitData") or \
-                request.args.get("tg_init_data")  # на случай GET-запросов
+                request.args.get("tg_init_data")
 
-    # Для локальной разработки можно временно отключить
+    # Для локальной разработки отключаем проверку
     if "localhost" in request.host or "127.0.0.1" in request.host:
-        return  # ← раскомментируй на время тестов
+        return
 
     if not init_data or not is_valid_telegram_initdata(init_data):
         abort(403, "Invalid Telegram authentication")
 
+# ───────────────────────────────────────────────
+# Функции работы с данными (без изменений)
 def load_data():
     default_structure = {
         "balance": {"cash": 0, "card": 0, "other": 0, "savings": 0},
@@ -70,7 +71,7 @@ def load_data():
             
             data = json.loads(content)
             
-            # Проверяем наличие всех необходимых ключей в балансе
+            # Проверяем наличие всех ключей в балансе
             for wallet in default_structure["balance"]:
                 if wallet not in data["balance"]:
                     data["balance"][wallet] = 0
@@ -84,18 +85,19 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+# ───────────────────────────────────────────────
+# Маршруты (без изменений)
 @app.route("/")
 def index():
     data = load_data()
     balance = data["balance"]
     total = sum(balance.values())
     
-    # Разделяем: только выполненные транзакции для истории
     all_tr = data.get("transactions", [])
     completed_tr = [t for t in all_tr if t.get("status") != "planned"]
     planned_tr = [t for t in all_tr if t.get("status") == "planned"]
     
-    last_tr = completed_tr[-10:][::-1] # Последние 10
+    last_tr = completed_tr[-10:][::-1]  # Последние 10
 
     return render_template(
         "index.html",
@@ -114,11 +116,9 @@ def transfer():
         amount = float(request.form.get("amount", 0))
 
         if from_acc != to_acc and amount > 0:
-            # Списываем с одного, добавляем на другой
             data["balance"][from_acc] -= amount
             data["balance"][to_acc] += amount
             
-            # Записываем как техническую транзакцию
             tr = {
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "type": "перевод",
@@ -130,8 +130,8 @@ def transfer():
             data["transactions"].append(tr)
             save_data(data)
         return redirect(url_for("index"))
+    
     return render_template("transfer.html")
-
 
 @app.route("/add", methods=["GET", "POST"])
 def add():
@@ -148,14 +148,13 @@ def add():
             elif tr_type == "income":
                 amount = abs(amount)
             else:
-                amount = 0.0  # защита от мусора
+                amount = 0.0
             
             category = request.form.get("category", "Прочее").strip()
             account = request.form.get("account", "cash").strip()
             note = request.form.get("note", "").strip()
 
             if amount == 0:
-                # Можно добавить flash-сообщение об ошибке, но пока просто пропустим
                 return redirect(url_for("index"))
 
             tr = {
@@ -177,31 +176,12 @@ def add():
             return redirect(url_for("index"))
             
         except ValueError:
-            # Некорректная сумма — можно вернуть с ошибкой
             return render_template("add.html", error="Сумма должна быть числом")
 
-    # GET — показываем пустую форму
     return render_template("add.html")
 
-# Запуск как десктоп-приложение
+# Запуск приложения
 if __name__ == "__main__":
-    # Для разработки можно запускать так:
-    # app.run(debug=True, port=5050)
-
-    # Для десктоп-версии:
-    window = webview.create_window(
-        "Моя Бухгалтерия",
-        "http://127.0.0.1:5050",
-        width=1100,
-        height=800,
-        resizable=True,
-        frameless=False,  # можно True для кастомного вида
-        easy_drag=True
-    )
-    # Запускаем flask в отдельном потоке
-    import threading
-    server = threading.Thread(target=app.run, kwargs={"port": 5050, "use_reloader": False, "debug": False})
-    server.daemon = True
-    server.start()
-
-    webview.start()
+    # Для локального запуска (python app.py)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
