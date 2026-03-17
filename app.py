@@ -42,8 +42,9 @@ def check_telegram_auth():
     if request.path.startswith("/static/"):
         return
 
-    init_data = request.headers.get("X-Telegram-WebApp-InitData") or \
-                request.args.get("tg_init_data")
+    init_data = (request.headers.get("X-Telegram-WebApp-InitData") or
+                request.args.get("tg_init_data") or
+                request.args.get("tgWebAppData"))
 
     # Для локальной разработки отключаем проверку
     if "localhost" in request.host or "127.0.0.1" in request.host:
