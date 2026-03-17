@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Добавить операцию — Моя Бухгалтерия</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+  <div class="container mx-auto px-4 py-8 max-w-lg">
+
+    <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">
+      Новая операция
+    </h1>
+
+    {% if error %}
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6" role="alert">
+      <strong>Ошибка:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+
+      <!-- Переключатель Доход / Расход -->
+      <div>
+        <label class="block text-gray-700 font-medium mb-2">Тип операции</label>
+        <div class="flex rounded-xl overflow-hidden border border-gray-300">
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="type" value="income" class="peer hidden" checked>
+            <div class="py-3 text-center font-medium transition-all peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500 bg-gray-100 text-gray-700">
+              Доход
+            </div>
+          </label>
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="type" value="expense" class="peer hidden">
+            <div class="py-3 text-center font-medium transition-all peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 bg-gray-100 text-gray-700">
+              Расход
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Сумма -->
+      <div>
+        <label for="amount" class="block text-gray-700 font-medium mb-2">Сумма (₽)</label>
+        <input 
+          type="number" 
+          id="amount" 
+          name="amount" 
+          step="0.01" 
+          min="0" 
+          required 
+          placeholder="0.00"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xl font-medium"
+        >
+      </div>
+
+      <!-- Категория -->
+      <div>
+        <label for="category" class="block text-gray-700 font-medium mb-2">Категория</label>
+        <select 
+          id="category" 
+          name="category" 
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800"
+        >
+          <option value="Зарплата">Зарплата</option>
+          <option value="Подарок">Подарок / премия</option>
+          <option value="Еда">Еда / кафе</option>
+          <option value="Транспорт">Транспорт</option>
+          <option value="Жильё">Жильё / коммуналка</option>
+          <option value="Развлечения">Развлечения</option>
+          <option value="Одежда">Одежда / обувь</option>
+          <option value="Здоровье">Здоровье / медицина</option>
+          <option value="Прочее" selected>Прочее</option>
+        </select>
+      </div>
+
+      <!-- Счёт -->
+      <div>
+        <label for="account" class="block text-gray-700 font-medium mb-2">Счёт</label>
+        <select 
+          id="account" 
+          name="account" 
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800"
+        >
+          <option value="cash">Наличные</option>
+          <option value="card">Карта</option>
+          <option value="other">Другое</option>
+        </select>
+      </div>
+
+      <!-- Примечание -->
+      <div>
+        <label for="note" class="block text-gray-700 font-medium mb-2">Примечание (опционально)</label>
+        <textarea 
+          id="note" 
+          name="note" 
+          rows="3"
+          placeholder="Например: обед в кафе, зарплата за март..."
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+        ></textarea>
+      </div>
+
+      <!-- Кнопки -->
+      <div class="flex gap-4 pt-4">
+        <button 
+          type="submit" 
+          class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-md"
+        >
+          Сохранить
+        </button>
+        <a 
+          href="{{ url_for('index') }}" 
+          class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-xl text-center transition-colors"
+        >
+          Отмена
+        </a>
+      </div>
+
+    </form>
+
+  </div>
+
+</body>
+</html>

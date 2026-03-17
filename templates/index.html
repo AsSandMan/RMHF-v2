@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Моя Бухгалтерия</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Если используешь Chart.js для графика — оставь эту строку -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+
+    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-10">
+      Домашняя бухгалтерия
+    </h1>
+
+    <!-- Карточки баланса в одну линию -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+
+      <!-- Наличные -->
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <div class="p-6 text-center">
+          <img 
+            src="https://thumbs.dreamstime.com/b/dollar-cash-money-icon-green-u-s-currency-banknote-vector-illustration-simple-flat-design-american-bill-finance-banking-421379396.jpg"
+            alt="Наличные" 
+            class="mx-auto h-20 w-20 object-contain rounded-full bg-green-50 p-3 mb-4"
+          >
+          <p class="text-gray-600 font-medium text-lg">Наличные</p>
+          <p class="text-3xl font-bold text-green-600 mt-1">
+            {{ balance.cash | int | default(0) }} ₽
+          </p>
+        </div>
+      </div>
+
+      <!-- Карта -->
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <div class="p-6 text-center">
+          <img 
+            src="https://media.istockphoto.com/id/909167414/vector/credit-card.jpg?s=1024x1024&w=is&k=20&c=MoVX5DzI8iK4lW6c8XKEeqs9VL9cJTkm5_MP-ouyduo="
+            alt="Карта" 
+            class="mx-auto h-20 w-20 object-contain rounded-full bg-blue-50 p-3 mb-4"
+          >
+          <p class="text-gray-600 font-medium text-lg">Карта</p>
+          <p class="text-3xl font-bold text-blue-600 mt-1">
+            {{ balance.card | int | default(0) }} ₽
+          </p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+         <div class="p-6 text-center">
+            <div class="mx-auto h-20 w-20 rounded-full bg-yellow-50 flex items-center justify-center mb-4">
+          <span class="text-3xl">🐷</span> </div>
+        <p class="text-gray-600 font-medium text-lg">Копилка</p>
+        <p class="text-3xl font-bold text-yellow-600 mt-1">
+          {{ balance.savings | int | default(0) }} ₽
+            </p>
+            </div>
+        </div> 
+
+      <!-- Итого -->
+      <div class="bg-indigo-50 rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-indigo-100">
+        <div class="p-6 text-center">
+          <img 
+            src="https://thumbs.dreamstime.com/b/colorful-flat-design-icons-featuring-stacks-dollar-coins-long-shadows-isolated-white-background-collection-434443726.jpg"
+            alt="Итого" 
+            class="mx-auto h-20 w-20 object-contain rounded-full bg-indigo-50 p-3 mb-4"
+          >
+          <p class="text-gray-700 font-medium text-lg">Итого</p>
+          <p class="text-4xl font-extrabold text-indigo-700 mt-1">
+            {{ total | int }} ₽
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="flex gap-4 justify-center mb-8">
+        <a href="/add" class="bg-green-500 hover:bg-green-600 text-white px-10 py-4 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300 inline-block min-w-[240px] text-center">+ Доход/Расход</a>
+        <a href="/transfer" class="bg-blue-600 text-white px-6 py-4 rounded-xl font-semibold shadow-md">⇄ Перевод</a>
+    </div>
+
+    {% if planned_tr %}
+    <h2 class="text-xl font-semibold text-orange-600 mb-4">⏳ Отложенные платежи</h2>
+    <div class="bg-orange-50 rounded-2xl p-4 mb-8 border border-orange-200">
+        {% for tr in planned_tr %}
+        <div class="flex justify-between border-b py-2 border-orange-100">
+            <span>{{ tr.date }} — <b>{{ tr.category }}</b></span>
+            <span class="font-bold">{{ tr.amount }} ₽</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Кнопка под карточками — узкая, центрированная
+    <div class="flex justify-center mb-12">
+      <a href="/add" 
+         class="bg-green-500 hover:bg-green-600 text-white px-10 py-4 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300 inline-block min-w-[240px] text-center">
+        + Добавить доход / расход
+      </a>
+    </div> -->
+
+    <!-- Блок последних операций (оставляем как был, но можно улучшить позже) -->
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6">Последние операции</h2>
+    <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+      <table class="w-full text-left">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-4 font-medium text-gray-700">Дата</th>
+            <th class="p-4 font-medium text-gray-700">Сумма</th>
+            <th class="p-4 font-medium text-gray-700">Категория</th>
+            <th class="p-4 font-medium text-gray-700">Счёт</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tr in last_tr %}
+          <tr class="border-b hover:bg-gray-50 transition-colors">
+            <td class="p-4">{{ tr.date }}</td>
+            <td class="p-4 font-medium {% if tr.amount > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+              {{ tr.amount | int }} ₽
+            </td>
+            <td class="p-4">{{ tr.category }}</td>
+            <td class="p-4">{{ tr.account }}</td>
+          </tr>
+          {% endfor %}
+          {% if not last_tr %}
+          <tr>
+            <td colspan="4" class="p-8 text-center text-gray-500">Пока нет операций</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</body>
+</html>

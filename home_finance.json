@@ -1,0 +1,82 @@
+{
+  "balance": {
+    "cash": 493.0,
+    "card": 0,
+    "other": 0,
+    "savings": 6510.0
+  },
+  "transactions": [
+    {
+      "date": "2026-03-16 14:14",
+      "type": "доход",
+      "amount": 702.0,
+      "category": "Прочее",
+      "account": "cash",
+      "note": "Остаток на 16/03/2026"
+    },
+    {
+      "date": "2026-03-16 19:51",
+      "type": "доход",
+      "amount": 5070.0,
+      "category": "Прочее",
+      "account": "cash",
+      "note": ""
+    },
+    {
+      "date": "2026-03-16 19:51",
+      "type": "перевод",
+      "amount": 5070.0,
+      "category": "Перевод",
+      "account": "cash → savings",
+      "status": "completed"
+    },
+    {
+      "date": "2026-03-16 19:51",
+      "type": "расход",
+      "amount": -580.0,
+      "category": "Прочее",
+      "account": "cash",
+      "note": "Сдача на работе"
+    },
+    {
+      "date": "2026-03-17 09:34",
+      "type": "доход",
+      "amount": 2006.0,
+      "category": "Зарплата",
+      "account": "cash",
+      "note": ""
+    },
+    {
+      "date": "2026-03-17 09:35",
+      "type": "перевод",
+      "amount": 560.0,
+      "category": "Перевод",
+      "account": "savings → cash",
+      "status": "completed"
+    },
+    {
+      "date": "2026-03-17 09:35",
+      "type": "перевод",
+      "amount": 2000.0,
+      "category": "Перевод",
+      "account": "cash → savings",
+      "status": "completed"
+    },
+    {
+      "date": "2026-03-17 09:35",
+      "type": "расход",
+      "amount": -95.0,
+      "category": "Еда",
+      "account": "cash",
+      "note": ""
+    },
+    {
+      "date": "2026-03-17 09:37",
+      "type": "расход",
+      "amount": -100.0,
+      "category": "Развлечения",
+      "account": "cash",
+      "note": "АКБ 18650"
+    }
+  ]
+}
