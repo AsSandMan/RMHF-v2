@@ -7,15 +7,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Если используешь Chart.js для графика — оставь эту строку -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
 
-  <div class="container mx-auto px-4 py-8 max-w-5xl">
+  <div class="container mx-auto px-4">
 
-    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-10">
+    <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">
       Домашняя бухгалтерия
     </h1>
-
+    <div id="user-info" class="mb-6 text-center"></div>
     <!-- Карточки баланса в одну линию -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
 
@@ -134,6 +135,39 @@
     </div>
 
   </div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();               // растягивает на весь экран
+  tg.MainButton.show();      // показывает главную кнопку Telegram (если нужно)
+
+  // Автоматически передаём initData в каждый запрос (fetch / form submit)
+  document.addEventListener("DOMContentLoaded", () => {
+    // Для всех форм
+    document.querySelectorAll("form").forEach(form => {
+      const hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = "tg_init_data";
+      hidden.value = tg.initData;
+      form.appendChild(hidden);
+    });
+
+    // Для fetch (если где-то используешь)
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+      options.headers = options.headers || {};
+      options.headers["X-Telegram-WebApp-InitData"] = tg.initData;
+      return originalFetch(url, options);
+    };
+  });
+
+  // Опционально: меняем тему под Telegram
+  if (tg.themeParams) {
+    document.body.style.background = tg.themeParams.bg_color || "#f3f4f6";
+    document.body.style.color = tg.themeParams.text_color || "#000";
+  }
+</script>
 
 </body>
 </html>

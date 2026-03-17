@@ -1,3 +1,15 @@
+import hmac
+import hashlib
+from flask import request, abort
+from dotenv import load_dotenv
+import os
+
+# Загружаем .env только если файл существует
+load_dotenv()  # автоматически ищет .env в корне проекта
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
@@ -7,6 +19,39 @@ import webview  # pywebview
 app = Flask(__name__)
 
 DATA_FILE = "home_finance.json"
+
+def is_valid_telegram_initdata(init_data: str) -> bool:
+    if not BOT_TOKEN:
+        return False  # на локалхосте можно временно отключить проверку
+    try:
+        params = dict(p.split("=", 1) for p in init_data.split("&") if "=" in p)
+        received_hash = params.pop("hash", None)
+        if not received_hash:
+            return False
+
+        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(params.items()))
+        secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
+        calculated = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        return calculated == received_hash
+    except:
+        return False
+
+# ------------------ защита всех маршрутов ------------------
+
+@app.before_request
+def check_telegram_auth():
+    if request.path.startswith("/static/"):  # пропускаем статику
+        return
+
+    init_data = request.headers.get("X-Telegram-WebApp-InitData") or \
+                request.args.get("tg_init_data")  # на случай GET-запросов
+
+    # Для локальной разработки можно временно отключить
+    if "localhost" in request.host or "127.0.0.1" in request.host:
+        return  # ← раскомментируй на время тестов
+
+    if not init_data or not is_valid_telegram_initdata(init_data):
+        abort(403, "Invalid Telegram authentication")
 
 def load_data():
     default_structure = {
