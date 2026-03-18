@@ -46,35 +46,44 @@ def get_user_id_from_initdata(init_data_str: str) -> int | None:
 
 # ───────────────────────────────────────────────
 # Защита всех маршрутов
+# @app.before_request
+# def check_telegram_auth():
+#     if request.path.startswith("/static/"):
+#         return
+
+#     init_data = (
+#         request.headers.get("X-Telegram-WebApp-InitData") or
+#         request.args.get("tg_init_data") or
+#         request.form.get("tg_init_data")
+#     )
+
+#     # Локальный тест
+#     if "localhost" in request.host or "127.0.0.1" in request.host:
+#         request.user_id = 600376786  # ← замени на свой Telegram ID для теста
+#         return
+
+#     # Если нет init_data → это прямой доступ по ссылке
+#     if not init_data:
+#         return render_template("not_in_telegram.html"), 403
+
+#     if not is_valid_telegram_initdata(init_data):
+#         return abort(403, "Недействительная авторизация Telegram")
+
+#     user_id = get_user_id_from_initdata(init_data)
+#     if not user_id:
+#         return abort(403, "Не удалось определить пользователя")
+
+#     # Сохраняем user_id для использования в маршрутах
+#     request.user_id = user_id
+
+
 @app.before_request
 def check_telegram_auth():
-    if request.path.startswith("/static/"):
-        return
+    # Временно пропускаем все запросы
+    # После теста верни обратно
+    request.user_id = 123456789  # фейковый ID
+    return
 
-    init_data = (
-        request.headers.get("X-Telegram-WebApp-InitData") or
-        request.args.get("tg_init_data") or
-        request.form.get("tg_init_data")
-    )
-
-    # Локальный тест
-    if "localhost" in request.host or "127.0.0.1" in request.host:
-        request.user_id = 600376786  # ← замени на свой Telegram ID для теста
-        return
-
-    # Если нет init_data → это прямой доступ по ссылке
-    if not init_data:
-        return render_template("not_in_telegram.html"), 403
-
-    if not is_valid_telegram_initdata(init_data):
-        return abort(403, "Недействительная авторизация Telegram")
-
-    user_id = get_user_id_from_initdata(init_data)
-    if not user_id:
-        return abort(403, "Не удалось определить пользователя")
-
-    # Сохраняем user_id для использования в маршрутах
-    request.user_id = user_id
 
 # ───────────────────────────────────────────────
 # Работа с данными (персональные файлы)
