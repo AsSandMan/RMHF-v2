@@ -21,61 +21,61 @@ DATA_FILE = "home_finance.json"
 
 # Функция валидации Telegram initData
 @app.before_request
-def check_telegram_auth():
-    if request.path.startswith("/static/"):
-        return
+# def check_telegram_auth():
+#     if request.path.startswith("/static/"):
+#         return
 
-    # Пытаемся получить initData из разных мест
-    init_data = (request.headers.get("X-Telegram-WebApp-InitData") or
-                 request.args.get("tg_init_data") or
-                 request.args.get("tgWebAppData"))
+#     # Пытаемся получить initData из разных мест
+#     init_data = (request.headers.get("X-Telegram-WebApp-InitData") or
+#                  request.args.get("tg_init_data") or
+#                  request.args.get("tgWebAppData"))
 
-    # Выводим отладочную информацию
-    print(f"[DEBUG] Path: {request.path}")
-    print(f"[DEBUG] Host: {request.host}")
-    print(f"[DEBUG] init_data present: {bool(init_data)}")
-    print(f"[DEBUG] BOT_TOKEN set: {bool(BOT_TOKEN)}")
-    if init_data:
-        print(f"[DEBUG] init_data length: {len(init_data)}")
-        print(f"[DEBUG] init_data preview: {init_data[:100]}...")  # первые 100 символов
+#     # Выводим отладочную информацию
+#     print(f"[DEBUG] Path: {request.path}")
+#     print(f"[DEBUG] Host: {request.host}")
+#     print(f"[DEBUG] init_data present: {bool(init_data)}")
+#     print(f"[DEBUG] BOT_TOKEN set: {bool(BOT_TOKEN)}")
+#     if init_data:
+#         print(f"[DEBUG] init_data length: {len(init_data)}")
+#         print(f"[DEBUG] init_data preview: {init_data[:100]}...")  # первые 100 символов
 
-    if "localhost" in request.host or "127.0.0.1" in request.host:
-        return
+#     if "localhost" in request.host or "127.0.0.1" in request.host:
+#         return
 
-    if not BOT_TOKEN:
-        print("[DEBUG] ERROR: BOT_TOKEN is missing!")
-        abort(403, "BOT_TOKEN not configured on server")
+#     if not BOT_TOKEN:
+#         print("[DEBUG] ERROR: BOT_TOKEN is missing!")
+#         abort(403, "BOT_TOKEN not configured on server")
 
-    if not init_data:
-        print("[DEBUG] ERROR: No init_data found in request")
-        abort(403, "Missing Telegram authentication data")
+#     if not init_data:
+#         print("[DEBUG] ERROR: No init_data found in request")
+#         abort(403, "Missing Telegram authentication data")
 
-    if not is_valid_telegram_initdata(init_data):
-        print("[DEBUG] ERROR: init_data validation failed")
-        abort(403, "Invalid Telegram authentication")
+#     if not is_valid_telegram_initdata(init_data):
+#         print("[DEBUG] ERROR: init_data validation failed")
+#         abort(403, "Invalid Telegram authentication")
 
-    print("[DEBUG] Authentication successful")
+#     print("[DEBUG] Authentication successful")
 
-def is_valid_telegram_initdata(init_data: str) -> bool:
-    try:
-        params = dict(p.split("=", 1) for p in init_data.split("&") if "=" in p)
-        received_hash = params.pop("hash", None)
-        print(f"[DEBUG] Params keys: {list(params.keys())}")
-        print(f"[DEBUG] Hash present: {bool(received_hash)}")
+# def is_valid_telegram_initdata(init_data: str) -> bool:
+#     try:
+#         params = dict(p.split("=", 1) for p in init_data.split("&") if "=" in p)
+#         received_hash = params.pop("hash", None)
+#         print(f"[DEBUG] Params keys: {list(params.keys())}")
+#         print(f"[DEBUG] Hash present: {bool(received_hash)}")
 
-        if not received_hash:
-            print("[DEBUG] No hash in init_data")
-            return False
+#         if not received_hash:
+#             print("[DEBUG] No hash in init_data")
+#             return False
 
-        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(params.items()))
-        secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
-        calculated = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-        result = (calculated == received_hash)
-        print(f"[DEBUG] Validation result: {result}")
-        return result
-    except Exception as e:
-        print(f"[DEBUG] Exception in validation: {e}")
-        return False
+#         data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(params.items()))
+#         secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
+#         calculated = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+#         result = (calculated == received_hash)
+#         print(f"[DEBUG] Validation result: {result}")
+#         return result
+#     except Exception as e:
+#         print(f"[DEBUG] Exception in validation: {e}")
+#         return False
 
 # ───────────────────────────────────────────────
 # Функции работы с данными (без изменений)
