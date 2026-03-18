@@ -17,10 +17,10 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})  # для теста; потом можно сузить
 
-DATA_FILE = "home_finance.json"
+DATA_FILE = os.path.join(os.path.dirname(__file__), "data", "home_finance.json")
 
 # Функция валидации Telegram initData
-@app.before_request
+# @app.before_request
 # def check_telegram_auth():
 #     if request.path.startswith("/static/"):
 #         return
