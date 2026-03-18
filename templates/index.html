@@ -78,8 +78,8 @@
     </div>
 
     <div class="flex gap-4 justify-center mb-8">
-        <a href="/add" class="bg-green-500 hover:bg-green-600 text-white px-10 py-4 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300 inline-block min-w-[240px] text-center">+ Доход/Расход</a>
-        <a href="/transfer" class="bg-blue-600 text-white px-6 py-4 rounded-xl font-semibold shadow-md">⇄ Перевод</a>
+        <a href="/{{ user_id }}/add" class="bg-green-500 hover:bg-green-600 text-white px-10 py-4 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300 inline-block min-w-[240px] text-center">+ Доход/Расход</a>
+        <a href="/{{ user_id }}/add" class="bg-blue-600 text-white px-6 py-4 rounded-xl font-semibold shadow-md">⇄ Перевод</a>
     </div>
 
     {% if planned_tr %}
