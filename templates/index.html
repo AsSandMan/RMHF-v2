@@ -137,35 +137,47 @@
   </div>
 
 <script>
-  const tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();               // растягивает на весь экран
-  tg.MainButton.show();      // показывает главную кнопку Telegram (если нужно)
+  // Безопасный доступ к Telegram.WebApp
+  const tg = window.Telegram?.WebApp || null;
 
-  // Автоматически передаём initData в каждый запрос (fetch / form submit)
-  document.addEventListener("DOMContentLoaded", () => {
-    // Для всех форм
-    document.querySelectorAll("form").forEach(form => {
-      const hidden = document.createElement("input");
-      hidden.type = "hidden";
-      hidden.name = "tg_init_data";
-      hidden.value = tg.initData;
-      form.appendChild(hidden);
-    });
+  if (tg) {
+    // Это настоящий Telegram Mini App — выполняем все действия
+    tg.ready();
+    tg.expand();
 
-    // Для fetch (если где-то используешь)
+    console.log("Mini App запущен, initData:", tg.initData ? "пришёл" : "не пришёл");
+
+    const userId = tg.initDataUnsafe?.user?.id || null;
+
+    // Передача user_id в каждый запрос
     const originalFetch = window.fetch;
     window.fetch = function(url, options = {}) {
       options.headers = options.headers || {};
-      options.headers["X-Telegram-WebApp-InitData"] = tg.initData;
+      if (userId) {
+        options.headers["X-User-Id"] = userId;
+      }
       return originalFetch(url, options);
     };
-  });
 
-  // Опционально: меняем тему под Telegram
-  if (tg.themeParams) {
-    document.body.style.background = tg.themeParams.bg_color || "#f3f4f6";
-    document.body.style.color = tg.themeParams.text_color || "#000";
+    // Передача user_id в формы (POST)
+    document.querySelectorAll("form").forEach(form => {
+      const hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = "user_id";
+      hidden.value = userId || '';
+      form.appendChild(hidden);
+    });
+
+    // Тема от Telegram
+    if (tg.themeParams) {
+      document.body.style.background = tg.themeParams.bg_color || "#f3f4f6";
+      document.body.style.color = tg.themeParams.text_color || "#000";
+    }
+  } else {
+    // Это обычный браузер — ничего не ломаем
+    console.log("Это НЕ Telegram Mini App — обычный браузер");
+    // Можно показать предупреждение, если хочешь
+    // document.body.innerHTML += '<div style="position:fixed; bottom:10px; left:10px; background:red; color:white; padding:10px;">Приложение работает только внутри Telegram</div>';
   }
 </script>
 
