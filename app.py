@@ -1,24 +1,29 @@
-from flask import Flask, render_template, request, redirect, url_for, abort
+from flask import Flask, render_template, request, redirect, url_for
 import os
 import json
 from datetime import datetime
+import asyncio
+import threading
+from aiogram import Bot, Dispatcher
+from aiogram.filters import CommandStart
+from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from dotenv import load_dotenv
+
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 app = Flask(__name__)
 
-# Папка для персональных данных пользователей
 DATA_DIR = "user_data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
-def get_data_file(user_id: int) -> str:
+def get_data_file(user_id):
     return os.path.join(DATA_DIR, f"home_finance_{user_id}.json")
 
-def load_data(user_id: int) -> dict:
+def load_data(user_id):
     filename = get_data_file(user_id)
     if not os.path.exists(filename):
-        default = {
-            "balance": {"cash": 0, "card": 0, "other": 0, "savings": 0},
-            "transactions": []
-        }
+        default = {"balance": {"cash": 0, "card": 0, "other": 0, "savings": 0}, "transactions": []}
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(default, f, ensure_ascii=False, indent=2)
         return default
@@ -26,99 +31,70 @@ def load_data(user_id: int) -> dict:
     try:
         with open(filename, "r", encoding="utf-8") as f:
             data = json.load(f)
-            # Заполняем недостающие ключи
             for key in ["cash", "card", "other", "savings"]:
                 data["balance"].setdefault(key, 0)
             return data
-    except Exception as e:
-        print(f"Ошибка загрузки данных для {user_id}: {e}")
-        return {
-            "balance": {"cash": 0, "card": 0, "other": 0, "savings": 0},
-            "transactions": []
-        }
+    except:
+        return {"balance": {"cash": 0, "card": 0, "other": 0, "savings": 0}, "transactions": []}
 
-def save_data(user_id: int, data: dict):
+def save_data(user_id, data):
     filename = get_data_file(user_id)
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# Главная страница — /<user_id>
 @app.route("/<int:user_id>")
 def index(user_id):
     data = load_data(user_id)
     balance = data["balance"]
     total = sum(balance.values())
-
     all_tr = data.get("transactions", [])
     last_tr = all_tr[-10:][::-1] if all_tr else []
+    return render_template("index.html", balance=balance, total=total, last_tr=last_tr, user_id=user_id)
 
-    return render_template(
-        "index.html",
-        balance=balance,
-        total=total,
-        last_tr=last_tr,
-        user_id=user_id  # для ссылок в шаблоне
-    )
-
-# Добавление операции
 @app.route("/<int:user_id>/add", methods=["GET", "POST"])
 def add(user_id):
     if request.method == "POST":
         data = load_data(user_id)
-
-        try:
-            amount = float(request.form.get("amount", 0))
-            tr_type = request.form.get("type", "expense")
-            if tr_type == "expense":
-                amount = -abs(amount)
-            else:
-                amount = abs(amount)
-
-            if amount == 0:
-                return redirect(url_for("index", user_id=user_id))
-
-            category = request.form.get("category", "Прочее")
-            account = request.form.get("account", "cash")
-            note = request.form.get("note", "")
-
-            tr = {
-                "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "type": "доход" if amount > 0 else "расход",
-                "amount": amount,
-                "category": category,
-                "account": account,
-                "note": note
-            }
-
-            data["transactions"].append(tr)
-            data["balance"][account] = data["balance"].get(account, 0) + amount
-            save_data(user_id, data)
-
+        amount = float(request.form.get("amount", 0))
+        tr_type = request.form.get("type", "expense")
+        amount = -abs(amount) if tr_type == "expense" else abs(amount)
+        if amount == 0:
             return redirect(url_for("index", user_id=user_id))
-
-        except ValueError:
-            return render_template("add.html", user_id=user_id, error="Сумма должна быть числом")
-
+        category = request.form.get("category", "Прочее")
+        account = request.form.get("account", "cash")
+        note = request.form.get("note", "")
+        tr = {"date": datetime.now().strftime("%Y-%m-%d %H:%M"), "type": "доход" if amount > 0 else "расход", "amount": amount, "category": category, "account": account, "note": note}
+        data["transactions"].append(tr)
+        data["balance"][account] = data["balance"].get(account, 0) + amount
+        save_data(user_id, data)
+        return redirect(url_for("index", user_id=user_id))
     return render_template("add.html", user_id=user_id)
 
-# Перевод между счетами (если нужен)
-@app.route("/<int:user_id>/transfer", methods=["GET", "POST"])
-def transfer(user_id):
-    if request.method == "POST":
-        data = load_data(user_id)
-        from_acc = request.form.get("from_account")
-        to_acc = request.form.get("to_account")
-        amount = float(request.form.get("amount", 0))
+# Бот в фоне
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
 
-        if from_acc != to_acc and amount > 0 and from_acc in data["balance"] and to_acc in data["balance"]:
-            data["balance"][from_acc] -= amount
-            data["balance"][to_acc] += amount
-            save_data(user_id, data)
+@dp.message(CommandStart())
+async def start(message: Message):
+    user_id = message.from_user.id
+    app_url = f"https://remihf-bot.onrender.com/{user_id}"
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Открыть Мою бухгалтерию", url=app_url)]
+    ])
+    await message.answer(f"Привет! Твой кабинет:\n{app_url}", reply_markup=keyboard, disable_web_page_preview=True)
 
-        return redirect(url_for("index", user_id=user_id))
+async def run_bot():
+    await dp.start_polling(bot)
 
-    return render_template("transfer.html", user_id=user_id)
+def start_bot_in_thread():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(run_bot())
 
 if __name__ == "__main__":
+    # Запускаем бота в отдельном потоке
+    threading.Thread(target=start_bot_in_thread, daemon=True).start()
+
+    # Запускаем Flask-сайт
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
