@@ -70,6 +70,7 @@ def add(user_id):
         return redirect(url_for("index", user_id=user_id))
     return render_template("add.html", user_id=user_id)
 
+# ───────────────────────────────────────────────
 # Бот в фоне
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -79,22 +80,22 @@ async def start(message: Message):
     user_id = message.from_user.id
     app_url = f"https://remihf-bot.onrender.com/{user_id}"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Открыть Мою бухгалтерию", url=app_url)]
+        [InlineKeyboardButton(text="Открыть бухгалтерию", url=app_url)]
     ])
     await message.answer(f"Привет! Твой кабинет:\n{app_url}", reply_markup=keyboard, disable_web_page_preview=True)
 
 async def run_bot():
     await dp.start_polling(bot)
 
-def start_bot_in_thread():
+def start_bot():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(run_bot())
 
-if __name__ == "__main__":
-    # Запускаем бота в отдельном потоке
-    threading.Thread(target=start_bot_in_thread, daemon=True).start()
+# Запускаем бота в отдельном потоке
+threading.Thread(target=start_bot, daemon=True).start()
 
-    # Запускаем Flask-сайт
+# Запускаем Flask
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
