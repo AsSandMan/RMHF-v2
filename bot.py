@@ -14,7 +14,7 @@ dp = Dispatcher()
 @dp.message(CommandStart())
 async def start(message: Message):
     user_id = message.from_user.id
-    app_url = f"https://remihf-bot.onrender.com/{user_id}"
+    app_url = f"https://remihf-bot-1.onrender.com{user_id}"
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Открыть Мою бухгалтерию", url=app_url)]
