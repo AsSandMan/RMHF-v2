@@ -2,8 +2,11 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from dotenv import load_dotenv
+import os
 
-BOT_TOKEN = "твой_токен_бота"  # ← замени!
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -11,20 +14,20 @@ dp = Dispatcher()
 @dp.message(CommandStart())
 async def start(message: Message):
     user_id = message.from_user.id
-    app_url = f"https://remihf-bot.onrender.com/{user_id}"
+    app_url = f"https://remihfbot1-guflb56j.b4a.run/{user_id}"   # ← замени на свой URL
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Открыть Мою бухгалтерию", url=app_url)]
     ])
 
     await message.answer(
-        f"Привет! Вот твой личный кабинет:\n\n{app_url}\n\nНажми кнопку ниже:",
+        f"Привет! Твой личный кабинет:\n\n{app_url}",
         reply_markup=keyboard,
         disable_web_page_preview=True
     )
 
 async def main():
-    print("Бот запущен. Напиши /start в чате.")
+    print("Бот запущен")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
