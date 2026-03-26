@@ -3,10 +3,14 @@ import os
 import json
 from datetime import datetime
 from dotenv import load_dotenv
+from flask_cors import CORS
+
 
 load_dotenv()
 
 app = Flask(__name__)
+
+CORS(app)  # ← важно для Telegram Mini App
 
 DATA_DIR = "user_data"
 os.makedirs(DATA_DIR, exist_ok=True)
