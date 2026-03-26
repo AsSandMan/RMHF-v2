@@ -1,18 +1,27 @@
-# Используем официальный образ Python 3.14
-# VSCode может показывать предупреждение, но образ существует
 FROM python:3.14-slim
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем файлы проекта
-COPY . /app
+# Устанавливаем системные зависимости (иногда нужно)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем зависимости
+# Копируем и устанавливаем зависимости
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Открываем порт (Back4app обычно использует 8080)
+# Копируем код
+COPY . .
+
+# Создаём папку для данных (чтобы не падало)
+RUN mkdir -p user_data
+
 EXPOSE 8080
 
-# Команда запуска (Flask + бот в фоне)
-CMD ["sh", "-c", "gunicorn -w 4 -b 0.0.0.0:8080 app:app"]
+# Более надёжный запуск Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", \
+     "--workers", "2", \
+     "--timeout", "120", \
+     "--log-level", "info", \
+     "app:app"]
