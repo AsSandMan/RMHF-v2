@@ -28,8 +28,13 @@ async def send_welcome(message: types.Message):
 # --- МАРШРУТЫ WEB APP ---
 @app.route('/')
 def index():
+    # 1. Пробуем взять из параметров ссылки (/?user_id=...)
+    # 2. Пробуем взять из кастомного заголовка (от твоего JS)
     user_id = request.args.get('user_id') or request.headers.get('X-User-Id')
-    if not user_id: return "Запустите через Telegram"
+    
+    if not user_id:
+        # Если ID нет, отдаем пустую страницу с JS, который его вытащит и перезагрузит
+        return render_template('index.html', balance=None, last_tr=[], total=0, user_id=None)
     
     user, last_tr = get_user_data(user_id)
     if not user:

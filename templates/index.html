@@ -26,6 +26,24 @@
     </div>
 
     <script>
+        const tg = window.Telegram?.WebApp || null;
+
+        if (tg) {
+            tg.ready();
+            tg.expand();
+
+            const userId = tg.initDataUnsafe?.user?.id;
+
+            // Если в URL нет user_id, перезагружаем страницу с ним
+            const urlParams = new URLSearchParams(window.location.search);
+            if (userId && !urlParams.has('user_id')) {
+                urlParams.set('user_id', userId);
+                window.location.search = urlParams.toString();
+            }
+            
+            // Остальной твой код (fetch, формы и т.д.)
+        }
+
         let tg = window.Telegram.WebApp;
         tg.expand();
         const userId = tg.initDataUnsafe.user.id;

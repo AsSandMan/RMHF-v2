@@ -14,7 +14,7 @@
         <h1 class="text-xl font-bold">Перевод</h1>
     </div>
 
-    <form method="POST" action="/transfer" class="bg-white rounded-2xl shadow-sm p-6 space-y-6">
+    <form method="POST" id="addForm" class="bg-white rounded-2xl shadow-md p-8 space-y-6">
       <input type="hidden" name="user_id" id="user_id_input">
 
       <div class="grid grid-cols-1 gap-4">
@@ -58,6 +58,13 @@
     tg.expand();
     // Автоматически вставляем ID пользователя в скрытое поле формы
     document.getElementById('user_id_input').value = tg.initDataUnsafe?.user?.id || "";
+    const tg = window.Telegram.WebApp;
+const userId = tg.initDataUnsafe?.user?.id;
+
+    // Устанавливаем action динамически, чтобы ID точно попал в URL
+    if (userId) {
+        document.getElementById('addForm').action = `/${userId}/add`;
+    }
   </script>
 </body>
 </html>
