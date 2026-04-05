@@ -1,5 +1,6 @@
 import os
 import threading
+import asyncio
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify
 from aiogram import Bot, Dispatcher, types, executor
@@ -67,8 +68,14 @@ def transfer():
     return jsonify({'success': success})
 
 # Функция запуска бота в отдельном потоке
+
 def run_bot():
-    executor.start_polling(dp, skip_updates=True)
+    # Создаем новый цикл событий специально для этого потока
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    # Запускаем поллинг через этот цикл
+    executor.start_polling(dp, skip_updates=True, loop=loop)
 
 if __name__ == '__main__':
     init_db()
