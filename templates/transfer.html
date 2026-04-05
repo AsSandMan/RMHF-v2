@@ -9,61 +9,50 @@
 </head>
 <body class="bg-gray-50 min-h-screen p-4">
   <div class="max-w-lg mx-auto">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-8">
         <a href="/?user_id={{ user_id }}" class="text-indigo-600 font-bold">← Назад</a>
         <h1 class="text-xl font-bold">Перевод</h1>
     </div>
 
-    <form method="POST" id="addForm" class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <form method="POST" action="/transfer" id="transferForm" class="bg-white rounded-3xl p-8 shadow-sm space-y-6">
       <input type="hidden" name="user_id" id="user_id_input">
 
-      <div class="grid grid-cols-1 gap-4">
-        <div>
-          <label class="block text-gray-600 text-sm mb-2">Списать с</label>
-          <select name="from_account" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-indigo-500">
-            <option value="cash">Наличные</option>
-            <option value="card">Карта</option>
-            <option value="savings">Копилка</option>
-          </select>
-        </div>
-
-        <div class="flex justify-center -my-2">
-            <div class="bg-indigo-100 text-indigo-600 p-2 rounded-full">↓</div>
-        </div>
-
-        <div>
-          <label class="block text-gray-600 text-sm mb-2">Зачислить на</label>
-          <select name="to_account" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-indigo-500">
-            <option value="savings">Копилка</option>
-            <option value="card">Карта</option>
-            <option value="cash">Наличные</option>
-          </select>
-        </div>
+      <div class="space-y-2">
+        <label class="text-sm text-gray-500 ml-1">Откуда</label>
+        <select name="from_account" class="w-full p-4 bg-gray-50 rounded-xl focus:ring-2 focus:ring-indigo-500">
+            <option value="cash">💵 Наличные</option>
+            <option value="card">💳 Карта</option>
+            <option value="savings">🐷 Копилка</option>
+        </select>
       </div>
 
-      <div>
-        <label class="block text-gray-600 text-sm mb-2">Сумма перевода</label>
-        <input type="number" step="0.01" name="amount" required placeholder="0.00" 
-               class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-2xl font-bold focus:outline-indigo-500">
+      <div class="flex justify-center -my-4 relative z-10">
+          <div class="bg-white p-2 rounded-full shadow-md border border-gray-100 text-indigo-600 font-bold">↓</div>
       </div>
 
-      <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all">
+      <div class="space-y-2">
+        <label class="text-sm text-gray-500 ml-1">Куда</label>
+        <select name="to_account" class="w-full p-4 bg-gray-50 rounded-xl focus:ring-2 focus:ring-indigo-500">
+            <option value="savings">🐷 Копилка</option>
+            <option value="card">💳 Карта</option>
+            <option value="cash">💵 Наличные</option>
+        </select>
+      </div>
+
+      <input type="number" step="0.01" name="amount" required placeholder="Сумма перевода" 
+             class="w-full p-6 bg-gray-50 rounded-2xl text-2xl font-bold text-center focus:outline-indigo-500">
+
+      <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold text-xl shadow-lg active:scale-95 transition-all">
         Перевести
       </button>
     </form>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    // Автоматически вставляем ID пользователя в скрытое поле формы
-    document.getElementById('user_id_input').value = tg.initDataUnsafe?.user?.id || "";
-    const tg = window.Telegram.WebApp;
-const userId = tg.initDataUnsafe?.user?.id;
-
-    // Устанавливаем action динамически, чтобы ID точно попал в URL
-    if (userId) {
-        document.getElementById('addForm').action = `/${userId}/add`;
+    const tg = window.Telegram?.WebApp || null;
+    if (tg) {
+        tg.ready();
+        document.getElementById('user_id_input').value = tg.initDataUnsafe?.user?.id || "";
     }
   </script>
 </body>
