@@ -30,7 +30,6 @@ if not API_TOKEN or ":" not in API_TOKEN:
 if not API_TOKEN:
     exit("Ошибка: Токен бота не найден! Проверь файл .env или переменные окружения.")
 
-API_TOKEN = 'ВАШ_ТОКЕН'
 app = Flask(__name__)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
