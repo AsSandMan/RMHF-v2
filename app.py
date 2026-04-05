@@ -6,15 +6,30 @@ from aiogram import Bot, Dispatcher, types, executor
 from database import init_db, add_user, get_user, update_balance
 
 # Настройки
-# Загружаем переменные из .env
-load_dotenv()
+# # Загружаем переменные из .env
+# load_dotenv()
 
-# Теперь достаем токен безопасно
+# # Теперь достаем токен безопасно
+# API_TOKEN = os.getenv('BOT_TOKEN')
+if os.path.exists(".env"):
+    load_dotenv()
+
+# Пробуем достать токен
 API_TOKEN = os.getenv('BOT_TOKEN')
+
+# Маленький лайфхак для отладки (в логи Render выведет длину токена)
+if API_TOKEN:
+    print(f"DEBUG: Токен найден, длина: {len(API_TOKEN)} символов")
+else:
+    print("DEBUG: Токен не найден в переменных окружения!")
+
+# Проверка токена перед запуском бота
+if not API_TOKEN or ":" not in API_TOKEN:
+    raise ValueError("Ошибка: BOT_TOKEN пустой или имеет неверный формат!")
 
 if not API_TOKEN:
     exit("Ошибка: Токен бота не найден! Проверь файл .env или переменные окружения.")
-    
+
 API_TOKEN = 'ВАШ_ТОКЕН'
 app = Flask(__name__)
 bot = Bot(token=API_TOKEN)
