@@ -43,7 +43,7 @@ async def send_welcome(message: types.Message):
     # Кнопка для открытия Web App
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     # Замени URL на адрес своего сервера, когда задеплоишь
-    web_app = types.WebAppInfo(url="https://твой-адрес.render.com") 
+    web_app = types.WebAppInfo(url="https://rmhf-v2.onrender.com") 
     markup.add(types.KeyboardButton("Открыть Кошелек 💳", web_app=web_app))
     
     await message.reply(f"Привет, {message.from_user.first_name}! Твой счет активирован.", reply_markup=markup)
