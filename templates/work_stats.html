@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статистика работы</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+  <div class="max-w-lg mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <a href="/?user_id={{ user_id }}" class="text-indigo-600 font-bold">← Назад</a>
+        <h1 class="text-2xl font-bold">Моя Работа</h1>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-indigo-500">
+            <p class="text-gray-500 text-sm">Отработано</p>
+            <p class="text-2xl font-bold">{{ stats.total_days }} дн.</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-500">
+            <p class="text-gray-500 text-sm">Заработано</p>
+            <p class="text-2xl font-bold">{{ stats.total_earned | int }} ₽</p>
+        </div>
+    </div>
+
+    <div class="bg-indigo-600 text-white p-6 rounded-2xl shadow-lg mb-8">
+        <p class="opacity-80">Средний доход в день</p>
+        <p class="text-3xl font-bold">{{ stats.avg_per_day | int }} ₽</p>
+    </div>
+
+    <form action="/{{ user_id }}/add-work" method="POST" class="mb-8">
+        <div class="flex gap-2">
+            <input type="number" name="earnings" placeholder="Доход за сегодня" class="flex-1 p-4 rounded-xl border border-gray-300 focus:outline-indigo-500">
+            <button type="submit" class="bg-green-500 text-white px-6 py-4 rounded-xl font-bold">Записать день</button>
+        </div>
+    </form>
+  </div>
+</body>
+</html>

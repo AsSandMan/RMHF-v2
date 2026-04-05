@@ -2,86 +2,79 @@ import os
 import threading
 import asyncio
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 from aiogram import Bot, Dispatcher, types, executor
-from database import init_db, add_user, get_user, update_balance
+from database import *
 
-# Настройки
-# # Загружаем переменные из .env
-# load_dotenv()
-
-# # Теперь достаем токен безопасно
-# API_TOKEN = os.getenv('BOT_TOKEN')
-if os.path.exists(".env"):
-    load_dotenv()
-
-# Пробуем достать токен
+load_dotenv()
 API_TOKEN = os.getenv('BOT_TOKEN')
-
-# Маленький лайфхак для отладки (в логи Render выведет длину токена)
 if API_TOKEN:
-    print(f"DEBUG: Токен найден, длина: {len(API_TOKEN)} символов")
-else:
-    print("DEBUG: Токен не найден в переменных окружения!")
-
-# Проверка токена перед запуском бота
-if not API_TOKEN or ":" not in API_TOKEN:
-    raise ValueError("Ошибка: BOT_TOKEN пустой или имеет неверный формат!")
-
-if not API_TOKEN:
-    exit("Ошибка: Токен бота не найден! Проверь файл .env или переменные окружения.")
+    API_TOKEN = API_TOKEN.strip()
 
 app = Flask(__name__)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
-# --- БОТ (aiogram) ---
+# --- ЛОГИКА БОТА ---
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
-    add_user(message.from_user.id, message.from_user.username)
-    
-    # Кнопка для открытия Web App
+    add_user(message.from_user.id)
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    # Замени URL на адрес своего сервера, когда задеплоишь
+    # ЗАМЕНИ НА СВОЮ ССЫЛКУ ОТ RENDER
     web_app = types.WebAppInfo(url="https://rmhf-v2.onrender.com") 
-    markup.add(types.KeyboardButton("Открыть Кошелек 💳", web_app=web_app))
-    
-    await message.reply(f"Привет, {message.from_user.first_name}! Твой счет активирован.", reply_markup=markup)
+    markup.add(types.KeyboardButton("Открыть Бухгалтерию 💰", web_app=web_app))
+    await message.reply("Привет! Твой личный фин-помощник готов.", reply_markup=markup)
 
-# --- ВЕБ-ПРИЛОЖЕНИЕ (Flask API) ---
+# --- МАРШРУТЫ WEB APP ---
 @app.route('/')
 def index():
-    return render_template('index.html')
+    user_id = request.args.get('user_id') or request.headers.get('X-User-Id')
+    if not user_id: return "Запустите через Telegram"
+    
+    user, last_tr = get_user_data(user_id)
+    if not user:
+        add_user(user_id)
+        user, last_tr = get_user_data(user_id)
+        
+    total = user['cash'] + user['card'] + user['savings']
+    return render_template('index.html', balance=user, last_tr=last_tr, total=total, user_id=user_id)
 
-@app.route('/api/get_balance', methods=['GET'])
-def get_balance():
-    user_id = request.args.get('user_id')
-    user = get_user(user_id)
-    if user:
-        return jsonify({'wallet': user[2], 'piggy': user[3]})
-    return jsonify({'error': 'User not found'}), 404
+@app.route('/<user_id>/add', methods=['GET', 'POST'])
+def add(user_id):
+    if request.method == 'POST':
+        add_transaction(user_id, request.form.get('type'), float(request.form.get('amount')),
+                        request.form.get('category'), request.form.get('account'), request.form.get('note'))
+        return redirect(url_for('index', user_id=user_id))
+    return render_template('add.html', user_id=user_id)
 
-@app.route('/api/transfer', methods=['POST'])
-def transfer():
-    data = request.json
-    success = update_balance(data['user_id'], float(data['amount']))
-    return jsonify({'success': success})
+@app.route('/transfer', methods=['POST'])
+def transfer_money():
+    user_id = request.form.get('user_id')
+    make_transfer(user_id, request.form.get('from_account'), request.form.get('to_account'), float(request.form.get('amount')))
+    return redirect(url_for('index', user_id=user_id))
 
-# Функция запуска бота в отдельном потоке
+@app.route('/<user_id>/work-stats')
+def work_stats(user_id):
+    stats = get_work_stats(user_id, datetime.now().strftime("%m.%Y"))
+    return render_template('work_stats.html', stats=stats, user_id=user_id)
+
+@app.route('/<user_id>/add-work', methods=['POST'])
+def add_work(user_id):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO work_days (user_id, date, earnings) VALUES (?, ?, ?)", 
+                   (user_id, datetime.now().strftime("%d.%m.%Y"), float(request.form.get('earnings', 0))))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('work_stats', user_id=user_id))
 
 def run_bot():
-    # Создаем новый цикл событий специально для этого потока
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    
-    # Запускаем поллинг через этот цикл
-    executor.start_polling(dp, skip_updates=True, loop=loop)
+    executor.start_polling(dp, skip_updates=True)
 
 if __name__ == '__main__':
     init_db()
-    # Запускаем бота в фоне
     threading.Thread(target=run_bot, daemon=True).start()
-    
-    # Render дает порт через переменную окружения PORT
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)

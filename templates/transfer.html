@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Перевод</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+  <div class="max-w-lg mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <a href="/?user_id={{ user_id }}" class="text-indigo-600 font-bold">← Назад</a>
+        <h1 class="text-xl font-bold">Перевод</h1>
+    </div>
+
+    <form method="POST" action="/transfer" class="bg-white rounded-2xl shadow-sm p-6 space-y-6">
+      <input type="hidden" name="user_id" id="user_id_input">
+
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="block text-gray-600 text-sm mb-2">Списать с</label>
+          <select name="from_account" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-indigo-500">
+            <option value="cash">Наличные</option>
+            <option value="card">Карта</option>
+            <option value="savings">Копилка</option>
+          </select>
+        </div>
+
+        <div class="flex justify-center -my-2">
+            <div class="bg-indigo-100 text-indigo-600 p-2 rounded-full">↓</div>
+        </div>
+
+        <div>
+          <label class="block text-gray-600 text-sm mb-2">Зачислить на</label>
+          <select name="to_account" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-indigo-500">
+            <option value="savings">Копилка</option>
+            <option value="card">Карта</option>
+            <option value="cash">Наличные</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-gray-600 text-sm mb-2">Сумма перевода</label>
+        <input type="number" step="0.01" name="amount" required placeholder="0.00" 
+               class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-2xl font-bold focus:outline-indigo-500">
+      </div>
+
+      <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all">
+        Перевести
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    // Автоматически вставляем ID пользователя в скрытое поле формы
+    document.getElementById('user_id_input').value = tg.initDataUnsafe?.user?.id || "";
+  </script>
+</body>
+</html>
